@@ -1,0 +1,90 @@
+esphome:
+  name: mipurifier
+  comment: for Xiaomi Mi Air Purifier 3H (and similar models using the new external component pattern)
+
+# Required configuration for the weird single core ESP-WROOM-32D module
+esp32:
+  board: esp32doit-devkit-v1
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_FREERTOS_UNICORE: y
+    advanced:
+      ignore_efuse_mac_crc: true
+      ignore_efuse_custom_mac: true
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: ""
+
+# Enable OTA updates
+ota:
+  password: ""
+
+# Wi-Fi configuration
+# EDIT CREDENTIALS OR PROVIDE YOUR OWN secrets.yaml
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Mipurifier Fallback Hotspot"
+    password: "PyCfsbmzuMbj"
+
+# Initialize the serial connection to the STM32 microcontroller
+uart:
+  id: uart_bus
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 115200
+
+# External components path - using local components
+external_components:
+  - source:
+      type: local
+      path: components
+
+# Initialize our MiPurifier component
+mipurifier:
+  id: mipurifier_component
+  uart_id: uart_bus
+
+# Main fan component for controlling the purifier
+fan:
+  - platform: mipurifier
+    name: "Power"
+    id: xiaomi_purifier_fan
+    mipurifier_id: mipurifier_component
+
+# Sensors for environmental data
+sensor:
+  - platform: mipurifier
+    mipurifier_id: mipurifier_component
+    air_quality:
+      name: "Air quality (PM2.5)"
+    humidity:
+      name: "Humidity"
+    temperature:
+      name: "Temperature"
+    filter_life:
+      name: "Filter remaining"
+
+# Config switches
+switch:
+  - platform: mipurifier
+    mipurifier_id: mipurifier_component
+    beeper:
+      name: "Beeper"
+    lock:
+      name: "Lock"
+
+# Config select components
+select:
+  - platform: mipurifier
+    mipurifier_id: mipurifier_component
+    brightness:
+      name: "Display Brightness"
